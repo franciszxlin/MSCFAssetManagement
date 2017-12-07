@@ -113,4 +113,63 @@ ooscp4=1-sum(cp4numer)/sum(denom4)
 ooscp4
 ooscp5=1-sum(cp5numer)/sum(denom5)
 ooscp5
+#Part (e)
+
+#Get the data
+#part (d) 
+bond=read.csv(file="C:\\Users\\zil20\\Desktop\\Asset Management\\wk4\\bondpriceclean.csv", header=TRUE)
+#Naive Strategy
+annualbond=bond[bond$t==as.integer(bond$t), ]
+start=which(annualbond$Month==19830630)
+end=nrow(annualbond)
+wealth1=c(100)
+for (i in start:end)
+{
+  startcapital=wealth1[length(wealth1)]
+  holding=startcapital/5
+  endcapital=holding*(exp(annualbond$y1[i])+exp(annualbond$r2[i])+exp(annualbond$r3[i])+exp(annualbond$r4[i])+exp(annualbond$r5[i]))
+  wealth1=c(wealth1, endcapital)
+}
+plot(as.Date(as.character(annualbond$Month[(start-1):end]), format="%Y%m%d"), wealth1, main="Wealth Path of Naive Strategy", xlab="Month", ylab="Wealth")
+
+# Use Fama-Bliss model for the not naive startegies
+bond=read.csv(file="C:\\Users\\zil20\\Desktop\\Asset Management\\wk4\\bondpriceclean.csv", header=TRUE)
+index=which(bond$t==as.integer(bond$t))
+start=which(bond$Month==19830630)
+init=which(index==start)
+wealth2=c(100)
+bond$f2y1=bond$f2-bond$y1
+bond$f3y1=bond$f3-bond$y1
+bond$f4y1=bond$f4-bond$y1
+bond$f5y1=bond$f5-bond$y1
+for (i in index[32:length(index)])
+{
+  fm2=lm(rx2~f2y1, data=bond[1:(i-1), ])
+  pred2=predict(fm2, newdata=bond[i,])
+  
+  fm3=lm(rx3~f3y1, data=bond[1:(i-1), ])
+  pred3=predict(fm3, newdata=bond[i,])
+  
+  fm4=lm(rx4~f4y1, data=bond[1:(i-1), ])
+  pred4=predict(fm4, newdata=bond[i,])
+  
+  fm5=lm(rx5~f5y1, data=bond[1:(i-1), ])
+  pred5=predict(fm5, newdata=bond[i,])
+  
+  avg_pred=(pred2+pred3+pred4+pred5)/4
+  
+  hold25=0.2+5*avg_pred
+  hold1=1-4*hold25
+  
+  startcapital=wealth2[length(wealth2)]
+  port1=startcapital*hold1
+  port25=startcapital*hold25
+  
+  endcapital=port1*exp(bond$y1[i])+port25*(exp(bond$r2[i])+exp(bond$r3[i])+exp(bond$r4[i])+exp(bond$r5[i]))
+  wealth2=c(wealth2, endcapital)
+}
+annualbond=bond[bond$t==as.integer(bond$t), ]
+start=which(annualbond$Month==1983063)
+end=nrow(annualbond)
+plot(as.Date(as.character(annualbond$Month[(start-1):end]), format="%Y%m%d"), wealth2, main="Wealth Path of Fama-Bliss Strategy", xlab="Month", ylab="Wealth")
 
